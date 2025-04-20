@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Smart Study Generator</title>
+
+    <!-- GoJS -->
+    <script src="https://unpkg.com/gojs/release/go.js"></script>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- MathJax -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <style>
+    :root {
+        --bg-color: #0f0f17;
+        --primary: #a36bff;
+        --primary-light: #b388ff;
+        --text-color: #f0f0f0;
+        --secondary: #6b44c0;
+        --accent: #ff44e3;
+        --neon-glow: 0 0 10px rgba(163, 107, 255, 0.7), 0 0 20px rgba(163, 107, 255, 0.5), 0 0 30px rgba(163, 107, 255, 0.3);
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Inter', sans-serif;
+    }
+
+    body {
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        overflow-x: hidden;
+    }
+
+    h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--primary);
+        text-shadow: var(--neon-glow);
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+
+    .mindmap-container {
+    width: 80vw; /* 80% of viewport width */
+    max-width: 100%; /* prevents overflow beyond 100% of viewport */
+    margin: 0 auto;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+    #gojs_container {
+        width: 100%;
+        height: 900px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .error {
+        color: #ff4444;
+        text-align: center;
+        margin-top: 10px;
+        font-size: 1rem;
+        background: rgba(255, 68, 68, 0.1);
+        border: 1px solid #ff4444;
+        padding: 1rem;
+        border-radius: 8px;
+    }
+
+    .topic-header {
+        text-align: center;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--primary-light);
+        margin-bottom: 1.5rem;
+        text-shadow: var(--neon-glow);
+    }
+</style>
+</head>
+<body>
+
+<h1>📚 Mind Map</h1>
+
+{% if error %}
+<div class="error">{{ error }}</div>
+{% endif %}
+
+{% if mind_map %}
+<div class="topic-header">Generated Materials for: <strong>{{ topic }}</strong></div>
+<div class="content">
+    <div class="mindmap-container">
+        <h2>🌳 Mind Map</h2>
+        <div id="gojs_container"></div>
+    </div>
+</div>
+{% endif %}
+<div><h4>CTRL + SCROLL : for zoom in or zoom out</h4></div>
+<script>
+    const mindMapDataRaw = {{ mind_map | default([]) | tojson | safe }};
+
+    function initGoJS() {
+        if (!mindMapDataRaw || mindMapDataRaw.length === 0) {
+            document.getElementById('gojs_container').innerHTML = '<p style="text-align: center; padding-top: 50px; color: #888;">No mind map data available for this topic.</p>';
+            return;
+        }
+
+        const $ = go.GraphObject.make;
+        const myDiagram = $(go.Diagram, "gojs_container", {
+            initialAutoScale: go.Diagram.Uniform,
+            layout: $(go.TreeLayout, {
+                angle: 0,
+                layerSpacing: 40
+            }),
+            "undoManager.isEnabled": true
+        });
+
+        myDiagram.nodeTemplate =
+            $(go.Node, "Auto",
+                { movable: true },
+                $(go.Shape, "RoundedRectangle", { fill: "#4caf50", strokeWidth: 0 }),
+                $(go.Panel, "Vertical",
+                    { margin: 4 },
+                    $(go.TextBlock, {
+                        margin: 6,
+                        editable: true,
+                        font: "bold 14px sans-serif",
+                        stroke: "white",
+                        wrap: go.TextBlock.WrapFit,
+                        maxSize: new go.Size(200, NaN)
+                    },
+                    new go.Binding("text", "content")
+                    )
+                )
+            );
+
+            myDiagram.linkTemplate =
+  $(go.Link,
+    { routing: go.Link.Normal },
+    $(go.Shape, {
+      stroke: "blue",
+      strokeWidth: 2,
+      strokeDashArray: [4, 2],
+      name: "LINKSHAPE"
+    })
+  );
+
+// Animate the dash offset
+function animateLinks() {
+  myDiagram.links.each(link => {
+    const shape = link.findObject("LINKSHAPE");
+    if (shape) {
+      let offset = shape.strokeDashOffset || 0;
+      shape.strokeDashOffset = offset - 1; // moves the dashes
+    }
+  });
+  requestAnimationFrame(animateLinks); // keep animating
+}
+animateLinks();
+
+
+        // Convert raw array to GoJS-compatible nodes and links
+        const nodes = [];
+        const links = [];
+        mindMapDataRaw.forEach(node => {
+            nodes.push({ key: node.id, content: node.content });
+            if (node.parent !== 'null') {
+                links.push({ from: node.parent, to: node.id });
+            }
+        });
+
+        myDiagram.model = new go.GraphLinksModel(nodes, links);
+
+        // Re-render MathJax after the diagram is ready
+        myDiagram.addDiagramListener("InitialLayoutCompleted", () => {
+            setTimeout(() => {
+                if (window.MathJax && window.MathJax.typesetPromise) {
+                    const container = document.getElementById("gojs_container");
+                    window.MathJax.typesetPromise([container])
+                        .catch((err) => console.error("MathJax typesetting failed:", err));
+                }
+            }, 200);
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', initGoJS);
+</script>
+
+</body>
+</html>

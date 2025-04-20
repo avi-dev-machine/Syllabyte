@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Aid Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="https://unpkg.com/gojs/release/go.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f0f17;
+            --primary: #a36bff;
+            --primary-light: #b388ff;
+            --text-color: #f0f0f0;
+            --secondary: #6b44c0;
+            --accent: #ff44e3;
+            --neon-glow: 0 0 10px rgba(163, 107, 255, 0.7), 0 0 20px rgba(163, 107, 255, 0.5), 0 0 30px rgba(163, 107, 255, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(15, 15, 23, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        .welcome-user {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logout-btn {
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            transform: translateY(-2px);
+            box-shadow: var(--neon-glow);
+        }
+
+        main {
+            flex: 1;
+            padding: 2rem;
+            position: relative;
+        }
+
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: var(--primary);
+            text-shadow: var(--neon-glow);
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        form {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(163, 107, 255, 0.3);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(5px);
+        }
+
+        input[type="text"] {
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(163, 107, 255, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            color: white;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        button {
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            font-size: 1rem;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            transform: translateY(-2px);
+            box-shadow: var(--neon-glow);
+        }
+
+        .output {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(5px);
+        }
+
+        .output h2 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .history {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+
+        .history li {
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+
+        .history-item {
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .history-item:hover {
+            background: rgba(163, 107, 255, 0.1);
+            transform: translateX(5px);
+        }
+
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        /* Add any additional styles from your existing index.html */
+        .loading-indicator {
+            color: var(--primary-light);
+            margin-left: 1rem;
+            animation: pulse 1.5s infinite;
+        }
+
+        .error-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .error-popup {
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid #ff4444;
+            color: #ff4444;
+            padding: 1rem;
+            border-radius: 8px;
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            animation: slideIn 0.3s ease;
+        }
+
+        .error-popup button {
+            background: none;
+            border: none;
+            color: #ff4444;
+            cursor: pointer;
+            padding: 0.5rem;
+            width: auto;
+            font-size: 1.2rem;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            margin-bottom: 0.5rem;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="doodle-canvas"></canvas>
+
+    <header>
+        <div class="welcome-user">
+            <span>Welcome, {{ session.username }}!</span>
+            <a href="/logout" class="logout-btn">Logout</a>
+        </div>
+    </header>
+
+    <main>
+        <div class="content">
+            <h1>Syllabyte</h1>
+            
+            <form method="POST">
+                <input type="text" name="topic" placeholder="Enter a topic like 'Machine Learning'" required>
+                <button type="submit">Generate</button>
+            </form>
+
+            {% if notes %}
+                <div class="output">
+                    <h2>📝 Notes</h2>
+                    <div id="notes-content">{{ notes | safe }}</div>
+                </div>
+
+                <div class="output">
+                    <h2>🔢 Formulas</h2>
+                    <div id="formulas-content">{{ formulas | safe }}</div>
+                </div>
+
+                <div class="output">
+                    <form action="{{ url_for('generate_study_material_route') }}" method="POST">
+                        <input type="hidden" name="topic" value="{{ request.form.get('topic') }}">
+                        <button type="submit">🔍 View More Study Materials</button>
+                    </form>
+                </div>
+
+                <div class="output">
+                    <h2>📝 Test Your Knowledge</h2>
+                    <form action="{{ url_for('mcq_page') }}" method="GET">
+                        <input type="hidden" name="topic" value="{{ request.form.get('topic', '') }}">
+                        <button type="submit" class="test-btn">Start Test</button>
+                    </form>
+                </div>
+            {% endif %}
+
+            <div class="history">
+                <h2>📜 Your Past Searches</h2>
+                <ul>
+                {% for item in history %}
+                    <li class="history-item" data-id="{{ item.id }}">
+                        <strong>{{ item.topic }}</strong> - {{ item.timestamp.strftime('%Y-%m-%d %H:%M') }}
+                    </li>
+                {% else %}
+                    <p>No search history yet.</p>
+                {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Canvas setup...
+        
+        // Initial content rendering
+        function renderContent() {
+            const notesContent = document.getElementById('notes-content');
+            if (notesContent) {
+                const rawNotes = notesContent.getAttribute('data-content') || notesContent.innerHTML;
+                if (rawNotes) {
+                    notesContent.innerHTML = marked.parse(rawNotes);
+                }
+            }
+
+            // Process MathJax
+            if (window.MathJax) {
+                MathJax.typesetPromise();
+            }
+        }
+
+        renderContent();
+
+        // History item click handler
+        document.querySelectorAll('.history-item').forEach(item => {
+            item.addEventListener('click', async function() {
+                const historyId = this.dataset.id;
+                const loadingIndicator = document.createElement('span');
+                loadingIndicator.className = 'loading-indicator';
+                loadingIndicator.textContent = ' Loading...';
+                
+                try {
+                    this.classList.add('loading');
+                    this.appendChild(loadingIndicator);
+                    
+                    const response = await fetch(`/get_history_content/${historyId}`);
+                    const data = await response.json();
+                    
+                    if (!response.ok || data.error) {
+                        throw new Error(data.error || `HTTP error! status: ${response.status}`);
+                    }
+
+                    // Update all sections
+                    const sections = {
+                        notes: '#notes-content',
+                        formulas: '#formulas-content',
+                        topic: 'input[name="topic"]'
+                    };
+
+                    // Show all output sections
+                    document.querySelectorAll('.output').forEach(section => {
+                        section.style.display = 'block';
+                    });
+
+                    // Update notes with markdown parsing
+                    if (data.notes) {
+                        const notesSection = document.querySelector(sections.notes);
+                        if (notesSection) {
+                            notesSection.innerHTML = marked.parse(data.notes);
+                        }
+                    }
+
+                    // Update formulas
+                    if (data.formulas) {
+                        const formulasSection = document.querySelector(sections.formulas);
+                        if (formulasSection) {
+                            formulasSection.innerHTML = data.formulas;
+                        }
+                    }
+
+                    // Update topic in all forms
+                    document.querySelectorAll(sections.topic).forEach(input => {
+                        input.value = data.topic || '';
+                    });
+
+                    // Refresh MathJax
+                    if (window.MathJax && window.MathJax.typesetPromise) {
+                        try {
+                            await MathJax.typesetPromise();
+                        } catch (mathJaxError) {
+                            console.warn('MathJax rendering error:', mathJaxError);
+                        }
+                    }
+
+                    // Smooth scroll to content
+                    const firstOutput = document.querySelector('.output');
+                    if (firstOutput) {
+                        firstOutput.scrollIntoView({ 
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+
+                } catch (error) {
+                    console.error('Error loading history:', error);
+                    const errorMessage = document.createElement('div');
+                    errorMessage.className = 'error-message';
+                    errorMessage.innerHTML = `
+                        <div class="error-popup">
+                            Failed to load content. ${error.message}
+                            <button onclick="this.parentElement.remove()">×</button>
+                        </div>
+                    `;
+                    document.querySelector('.content').prepend(errorMessage);
+                } finally {
+                    this.classList.remove('loading');
+                    loadingIndicator.remove();
+                }
+            });
+        });
+    });
+    </script>
+</body>
+</html>

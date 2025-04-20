@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>General Summary</title>
+    <!-- Add MathJax support -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f0f17;
+            --primary: #a36bff;
+            --primary-light: #b388ff;
+            --text-color: #f0f0f0;
+            --secondary: #6b44c0;
+            --accent: #ff44e3;
+            --neon-glow: 0 0 10px rgba(163, 107, 255, 0.7), 0 0 20px rgba(163, 107, 255, 0.5), 0 0 30px rgba(163, 107, 255, 0.3);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            flex-direction:column ;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-shadow: var(--neon-glow);
+            margin-bottom: 1.5rem;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--primary-light);
+            text-shadow: var(--neon-glow);
+            margin-bottom: 1rem;
+        }
+
+        .back-btn {
+            display: inline-block;
+            text-decoration: none;
+            color: var(--text-color);
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            margin-bottom: 1.5rem;
+        }
+
+        .back-btn:hover {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--neon-glow);
+        }
+
+        form {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 2rem;
+            width: auto;
+            max-width: 600px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            margin: 0 auto; /* Center the form horizontally */
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Center the content inside the form */
+        }
+
+        input[type="text"] {
+            width: 90%; /* Adjust width to fit nicely within the form */
+            max-width: 500px;
+            padding: 0.75rem 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-color);
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            outline: none;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(163, 107, 255, 0.25);
+        }
+
+        button {
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 90%; /* Match the width of the input box */
+            max-width: 500px;
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            transform: translateY(-2px);
+            box-shadow: var(--neon-glow);
+        }
+
+        .output {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 2rem;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            color: var(--text-color);
+        }
+
+        .summary-section {
+            line-height: 1.6;
+        }
+
+        .summary-section strong {
+            color: var(--primary-light);
+            display: inline-block;
+            margin-top: 5px;
+        }
+
+        .summary-section h2 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.8em;
+        }
+
+        .view-more-btn {
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .view-more-btn:hover {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            transform: translateY(-2px);
+            box-shadow: var(--neon-glow);
+        }
+
+        .text-center {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-btn">← Back to Home</a>
+        <h1>Syllabyte : General Overview</h1>
+        <form method="POST">
+            <input type="text" name="topic" placeholder="Enter a topic like 'Machine Learning'" required>
+            <button type="submit">Generate</button>
+        </form>
+    
+        <!-- <div class="upload-section">
+            <h2>📄 Or Upload a Document</h2>
+            <form action="{{ url_for('upload_document') }}" method="post" enctype="multipart/form-data">
+                <div class="file-input">
+                    <input type="file" name="file" id="file" accept=".pdf,.docx" required>
+                    <label for="file">Choose PDF or DOCX file</label>
+                </div>
+                <button type="submit">Generate Notes from Document</button>
+            </form>
+        </div> -->
+        {% if topic %}
+
+        <div class="header">
+            <h1>📚 Study Summary</h1>
+            <h2>Topic: {{ topic }}</h2>
+        </div>
+
+        <div class="output">
+            <div class="summary-section" id="summary-content"></div>
+        </div>
+
+        <div class="output text-center">
+            <form action="{{ url_for('general_mindmap') }}" method="POST">
+                <input type="hidden" name="topic" value="{{ topic }}">
+                <button type="submit" class="view-more-btn">
+                    🌳 View Mind Map
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Function to wrap text in strong tags
+            function wrapInStrong(text) {
+                return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            }
+
+            // Parse and format the summary content
+            const summaryContent = `{{ summary|safe }}`;
+            let formattedContent = marked.parse(summaryContent);
+            
+            // Add the formatted content
+            document.getElementById('summary-content').innerHTML = formattedContent;
+
+            // Process any remaining markdown-style bold text
+            const allParagraphs = document.querySelectorAll('#summary-content p');
+            allParagraphs.forEach(element => {
+                element.innerHTML = wrapInStrong(element.innerHTML);
+            });
+
+            // Trigger MathJax to process any math content
+            if (window.MathJax) {
+                MathJax.typesetPromise();
+            }
+        });
+    </script>
+</body>
+</html>

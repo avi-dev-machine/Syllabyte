@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Syllabyte - Transform Your Syllabus into Study Materials</title>
+     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #0f0f17;
+            --primary: #a36bff;
+            --primary-light: #b388ff;
+            --text-color: #f0f0f0;
+            --secondary: #6b44c0;
+            --accent: #ff44e3;
+        }
+         #doodle-canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 2;
+        pointer-events: none; /* Ensures clicks pass through to elements below */
+    }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+        
+        header {
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            width: 100%;
+            z-index: 10;
+            background-color: rgba(15, 15, 23, 0.8);
+            backdrop-filter: blur(10px);
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: -0.5px;
+        }
+        
+        .logo span {
+            color: var(--accent);
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            margin-right: 41rem;
+        }
+        
+        nav a {
+            color: var(--text-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+        
+        nav a:hover {
+            color: var(--primary);
+        }
+        
+        .auth-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+        
+       
+    /* Enhanced Glassmorphic Button Styles */
+    .btn {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1)); /* Gradient for depth */
+        border: 1px solid rgba(255, 255, 255, 0.4); /* Slightly brighter border */
+        border-radius: 16px; /* Softer rounded corners */
+        padding: 0.85rem 1.75rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: white;
+        backdrop-filter: blur(15px); /* Stronger blur for a frosted glass effect */
+        -webkit-backdrop-filter: blur(15px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); /* Deeper shadow for a floating effect */
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .btn:hover {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.2)); /* Brighter gradient on hover */
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3); /* More pronounced shadow */
+        transform: translateY(-4px); /* Slight lift effect */
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary-light), var(--primary)); /* Vibrant gradient */
+        color: white;
+        border: none;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, var(--primary), var(--accent)); /* Dynamic hover gradient */
+    }
+
+    /* Transparent Button with Glow Effect */
+    .btn-glow {
+        background: transparent; /* Transparent background */
+        border: 2px solid var(--primary); /* Border with primary color */
+        border-radius: 12px; /* Rounded corners */
+        padding: 0.85rem 1.75rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--primary); /* Text color matches primary */
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        z-index: 1;
+        overflow: hidden;
+    }
+
+    .btn-glow::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--primary);
+        opacity: 0.2; /* Subtle glow effect */
+        filter: blur(10px); /* Glow blur */
+        z-index: -1;
+        transition: opacity 0.3s ease, filter 0.3s ease;
+    }
+
+    .btn-glow:hover::before {
+        opacity: 0.4; /* Intensify glow on hover */
+        filter: blur(20px); /* Increase blur on hover */
+    }
+
+    .btn-glow:hover {
+        color: var(--accent); /* Change text color on hover */
+        transform: translateY(-3px); /* Slight lift effect */
+        box-shadow: 0 4px 15px rgba(163, 107, 255, 0.4); /* Add shadow */
+    }
+        
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 2rem;
+            padding-top: 6rem;
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        .content {
+            text-align: center;
+            z-index: 2;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+        }
+        
+        h1 {
+            font-family: 'VT323', monospace; /* Retro-inspired font */
+            font-size: 8.0rem  ; /* Adjust font size */
+            line-height: 1; /* Reduce line height for single-line text */
+            color: white;
+            font-weight: 700;
+            margin-bottom: 8rem;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+          white-space: pre-line;
+            overflow-wrap: break-word; /* Allow text to wrap within the container */
+        }
+        
+        .tagline {
+             font-family: 'Press Start 2P', sans-serif; /* Modern font for tagline */
+             font-style: oblique;
+            font-size: 25px;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: white;
+            padding: 0.5rem 1rem;
+            white-space: normal; /* Allow text to wrap within the container */
+        }
+        
+        .subheading {
+            font-family: quiicksand, sans-serif;
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+        
+        .cta-button {
+            background: linear-gradient(45deg, black, var(--primary));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 1rem 2rem;
+            font-size: 1.2rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-top: 2rem;
+            box-shadow: 0 4px 15px rgba(107, 68, 192, 0.3);
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(107, 68, 192, 0.4);
+        }
+        
+       
+    /* Feature Cards in 2x2 or Single Row Layout */
+    .features {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2.5rem;
+        justify-content: center;
+        margin-top: 5rem;
+        width: 100%;
+        max-width: 1200px;
+    }
+
+    .feature-card {
+        position: relative;
+        background: linear-gradient(145deg, rgba(30, 30, 45, 0.6), rgba(15, 15, 23, 0.8));
+        border-radius: 20px;
+        padding: 2.5rem 2rem;
+        width: 280px; /* Fixed width */
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        border: 1px solid rgba(163, 107, 255, 0.1);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+    }
+
+    .feature-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(45deg, transparent, rgba(163, 107, 255, 0.1), transparent);
+        transform: translateX(-100%);
+        transition: transform 0.6s ease;
+        z-index: 0;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-12px) scale(1.03);
+        border-color: var(--primary);
+        box-shadow: 0 15px 35px rgba(163, 107, 255, 0.25);
+    }
+
+    .feature-card:hover::before {
+        transform: translateX(100%);
+    }
+
+    .feature-icon {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, var(--primary-light), var(--primary));
+        border-radius: 50%;
+        margin-bottom: 1.5rem;
+        font-size: 2.5rem;
+        box-shadow: 0 10px 20px rgba(163, 107, 255, 0.3);
+        z-index: 1;
+    }
+
+    .feature-title {
+        position: relative;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 1.25rem;
+        color: white;
+        z-index: 1;
+        background: linear-gradient(90deg, var(--primary-light), var(--accent));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .feature-description {
+        position: relative;
+        font-size: 1rem;
+        line-height: 1.7;
+        color: rgba(240, 240, 240, 0.9);
+        text-align: center;
+        z-index: 1;
+    }
+
+    .feature-card::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(90deg, var(--primary), var(--accent));
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.4s ease;
+    }
+
+    .feature-card:hover::after {
+        transform: scaleX(1);
+    }
+    
+    /* For 2x2 grid layout */
+    @media (min-width: 1200px) {
+        .features {
+            display: grid;
+            grid-template-columns: repeat(2, 280px);
+            grid-template-rows: repeat(2, auto);
+            justify-content: center;
+        }
+    }
+    
+    /* For single row layout on medium screens */
+    @media (min-width: 769px) and (max-width: 1199px) {
+        .features {
+            display: flex;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            justify-content: flex-start;
+            padding: 1rem;
+        }
+        
+        .feature-card {
+            flex: 0 0 280px;
+        }
+    }
+    
+    /* Responsive adjustments for mobile */
+    @media (max-width: 768px) {
+        .features {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .feature-card {
+            width: 100%;
+            max-width: 280px;
+            margin-bottom: 2rem;
+        }
+    }
+        .benefits {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 800px;
+            margin-top: 4rem;
+            z-index: 2;
+        }
+        
+        .benefits-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+        
+        .benefit-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            background-color: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid rgba(163, 107, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .benefit-item:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 15px rgba(163, 107, 255, 0.1);
+        }
+        
+        .benefit-icon {
+            font-size: 1.5rem;
+            color: var(--accent);
+            flex-shrink: 0;
+            margin-top: 0.2rem;
+        }
+        
+        .benefit-content {
+            text-align: left;
+        }
+        
+        .benefit-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--primary-light);
+        }
+        
+        .benefit-description {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+        
+        footer {
+            padding: 2rem;
+            text-align: center;
+            background-color: rgba(15, 15, 23, 0.9);
+            z-index: 3;
+            margin-top: 3rem;
+        }
+        
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+        
+        .copyright {
+            opacity: 0.7;
+            font-size: 0.9rem;
+        }
+        
+        .footer-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+        
+        .footer-links a {
+            color: var(--text-color);
+            opacity: 0.7;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .footer-links a:hover {
+            color: var(--primary);
+            opacity: 1;
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            .tagline {
+                font-size: 1.3rem;
+            }
+            
+            .subheading {
+                font-size: 1.1rem;
+            }
+            
+            nav ul {
+                display: none;
+            }
+            
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .benefit-item {
+                flex-direction: column;
+            }
+        }
+
+        /* How It Works Section with Vertical Flowchart */
+        .how-it-works-section {
+            width: 100%;
+            max-width: 800px;
+            margin: 6rem auto 4rem;
+            padding: 0 2rem;
+            z-index: 2;
+            position: relative;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            font-size: 1.2rem;
+            color: var(--text-color);
+            opacity: 0.8;
+            margin-bottom: 4rem;
+        }
+
+        .steps-flowchart {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .step-box {
+            background: rgba(30, 30, 45, 0.5);
+            border-radius: 20px;
+            width: 100%;
+            height: 220px;
+            position: relative;
+            border: 1px solid rgba(163, 107, 255, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            display: flex;
+            overflow: hidden;
+        }
+
+        .step-box:hover {
+            border-color: var(--primary);
+            box-shadow: 0 15px 40px rgba(163, 107, 255, 0.2);
+            transform: translateY(-5px);
+        }
+
+        .step-number {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            width: 80px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 2rem;
+        }
+
+        .step-content {
+            flex: 1;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .step-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .step-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: var(--primary-light);
+        }
+
+        .step-description {
+            font-size: 1rem;
+            line-height: 1.5;
+            color: var(--text-color);
+            opacity: 0.9;
+            margin-bottom: 1.5rem;
+        }
+
+        .step-button {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 0.7rem 1.5rem;
+            color: white;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .step-button:hover {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(163, 107, 255, 0.3);
+        }
+
+        .button-icon {
+            transition: transform 0.3s ease;
+        }
+
+        .step-button:hover .button-icon {
+            transform: translateX(5px);
+        }
+
+        .step-connector {
+            height: 50px;
+            width: 100%;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            margin: 10px 0;
+        }
+
+        .connector-line {
+            width: 3px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--primary), var(--accent));
+        }
+
+        .connector-arrow {
+            position: absolute;
+            bottom: 0;
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 12px solid var(--accent);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .section-title {
+                font-size: 2rem;
+            }
+            
+            .section-subtitle {
+                font-size: 1.1rem;
+            }
+            
+            .step-box {
+                height: auto;
+                min-height: 220px;
+                flex-direction: column;
+            }
+            
+            .step-number {
+                width: 100%;
+                height: 50px;
+            }
+            
+            .step-content {
+                padding: 1.5rem;
+            }
+        }        /* FAQ Section */
+        .faq-section {
+            width: 100%;
+            max-width: 1000px;
+            margin: 6rem auto 4rem;
+            padding: 0 1.5rem;
+            z-index: 2;
+            position: relative;
+        }
+
+        .faq-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .faq-subtitle {
+            text-align: center;
+            font-size: 1.2rem;
+            color: var(--text-color);
+            opacity: 0.8;
+            margin-bottom: 3rem;
+        }
+
+        .faq-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .faq-item {
+            background: linear-gradient(145deg, rgba(30, 30, 45, 0.6), rgba(15, 15, 23, 0.8));
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid rgba(163, 107, 255, 0.1);
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .faq-item:hover {
+            border-color: rgba(163, 107, 255, 0.3);
+            box-shadow: 0 12px 30px rgba(163, 107, 255, 0.15);
+        }
+
+        .faq-question {
+            padding: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            user-select: none;
+        }
+
+        .faq-question h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-color);
+            flex: 1;
+            margin: 0;
+        }
+
+        .faq-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(163, 107, 255, 0.2);
+            color: var(--primary);
+            transition: all 0.3s ease;
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease, padding 0.5s ease;
+        }
+
+        .faq-answer p {
+            padding: 0 1.5rem 1.5rem 4rem;
+            color: var(--text-color);
+            opacity: 0.9;
+            line-height: 1.7;
+            font-size: 1.05rem;
+        }
+
+        /* Active state */
+        .faq-item.active {
+            background: linear-gradient(145deg, rgba(40, 40, 60, 0.6), rgba(25, 25, 38, 0.8));
+        }
+
+        .faq-item.active .faq-icon {
+            background: var(--primary);
+            color: white;
+            transform: rotate(45deg);
+        }
+
+        .faq-item.active .faq-answer {
+            max-height: 500px; /* Adjust based on content */
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .faq-title {
+                font-size: 2rem;
+            }
+            
+            .faq-subtitle {
+                font-size: 1.1rem;
+            }
+            
+            .faq-question h3 {
+                font-size: 1.1rem;
+            }
+            
+            .faq-answer p {
+                font-size: 1rem;
+                padding: 0 1.5rem 1.5rem 3.5rem;
+            }
+        }    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">Syllabyte<span>.</span></div>
+        <nav>
+            <ul>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#how-it-works">How It Works</a></li>
+                <li><a href="#faq">FAQ</a></li>
+                <li><a href="/login">Login</a></li>
+            </ul>
+        </nav>
+        <div class="auth-buttons">
+            <a href="/login" class="btn btn-outline">Log in</a>
+            <a href="/register" class="btn btn-primary">Sign up</a>
+        </div>
+    </header>
+    
+    <main>
+        <canvas id="doodle-canvas"></canvas>
+        
+        <div class="content">
+            <p class="tagline"></p>
+            <h1>Smarter Notes. Sharper Minds. Faster Results.</h1>
+            <p class="tagline">One Platform. Every Tool. Infinite Learning.</p>
+            
+            <button class="cta-button" onclick="window.location.href='/register'">Get Started</button>
+            
+            <div class="features">
+                <div class="feature-card">
+                    <div class="feature-icon">🎮</div>
+                    <h3 class="feature-title">Multimedia Notes</h3>
+                    <p class="feature-description">Access interactive notes, formulas, mind maps, flashcards, and practice quizzes in various engaging formats.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📄</div>
+                    <h3 class="feature-title">Upload PDF Notes</h3>
+                    <p class="feature-description">Automatically transform your PDF files into structured study materials, saving hours of manual work.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚙</div>
+                    <h3 class="feature-title">Customize Study Flow</h3>
+                    <p class="feature-description">Tailor your learning experience with our adaptable platform that grows with your educational needs.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">✅</div>
+                    <h3 class="feature-title">Take Practice Quiz</h3>
+                    <p class="feature-description">Reinforce your understanding with adaptive MCQs and interactive flashcards that target your weak areas.</p>
+                </div>
+            </div>                        <div class="benefits">
+                <h2 class="benefits-title">Why Choose Syllabyte?</h2>
+                
+                <div class="benefit-item">
+                    <div class="benefit-icon">🧠</div>
+                    <div class="benefit-content">
+                        <h3 class="benefit-title">Improved Retention</h3>
+                        <p class="benefit-description">Engage with multimedia resources to enhance your learning experience and retain information longer. Our diverse study materials help you connect concepts in multiple ways.</p>
+                    </div>
+                </div>
+                
+                <div class="benefit-item">
+                    <div class="benefit-icon">⚡</div>
+                    <div class="benefit-content">
+                        <h3 class="benefit-title">Increased Efficiency</h3>
+                        <p class="benefit-description">Streamline your studying with personalized learning paths and automated note generation. Focus on what matters most and save hours of manual work.</p>
+                    </div>
+                </div>
+                
+                <div class="benefit-item">
+                    <div class="benefit-icon">⏱</div>
+                    <div class="benefit-content">
+                        <h3 class="benefit-title">Better Time Management</h3>
+                        <p class="benefit-description">Focus on what matters most with our customizable platform. Organize your study schedule and track your progress to maximize productivity.</p>
+                    </div>
+                </div>
+                
+                <div class="benefit-item">
+                    <div class="benefit-icon">💡</div>
+                    <div class="benefit-content">
+                        <h3 class="benefit-title">Enhanced Understanding</h3>
+                        <p class="benefit-description">Reinforce your knowledge with practice quizzes and flashcards. Test yourself regularly to identify gaps in your understanding and strengthen your grasp of complex topics.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- How It Works Section -->
+            <div class="how-it-works-section">
+                <h2 class="section-title">How Syllabyte Works</h2>
+                <p class="section-subtitle">Transform your learning in three simple steps</p>
+                
+                <div class="steps-flowchart">
+                    <div class="step-box">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <div class="step-icon">📄</div>
+                            <h3 class="step-title">Upload Your Syllabus</h3>
+                            <p class="step-description">Upload your syllabus, course notes, or any study material in PDF, DOCX, or TXT format.</p>
+                            <button class="step-button" onclick="window.location.href='upload.html'">
+                                <span class="button-text">Upload Now</span>
+                                <span class="button-icon">→</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="step-connector">
+                        <div class="connector-line"></div>
+                        <div class="connector-arrow"></div>
+                    </div>
+                    
+                    <div class="step-box">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <div class="step-icon">⚙</div>
+                            <h3 class="step-title">Customize Your Experience</h3>
+                            <p class="step-description">Select your preferred study formats, learning style, and focus areas to personalize your materials.</p>
+                            <button class="step-button" onclick="window.location.href='customize.html'">
+                                <span class="button-text">Customize</span>
+                                <span class="button-icon">→</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="step-connector">
+                        <div class="connector-line"></div>
+                        <div class="connector-arrow"></div>
+                    </div>
+                    
+                    <div class="step-box">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <div class="step-icon">🚀</div>
+                            <h3 class="step-title">Learn & Excel</h3>
+                            <p class="step-description">Access your personalized study materials, practice with quizzes, and track your progress.</p>
+                            <button class="step-button" onclick="window.location.href='learn.html'">
+                                <span class="button-text">Start Learning</span>
+                                <span class="button-icon">→</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ Section -->
+            <div class="faq-section">
+                <h2 class="faq-title">Frequently Asked Questions</h2>
+                <p class="faq-subtitle">Everything you need to know about Syllabyte</p>
+                
+                <div class="faq-container">
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="faq-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 4V20M4 12H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                </svg>
+                            </span>
+                            <h3>How does Syllabyte transform my syllabus into study materials?</h3>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Syllabyte uses advanced AI to analyze your syllabus or course materials, identifying key concepts, relationships, and learning objectives. It then generates customized study materials including notes, flashcards, mind maps, and practice quizzes tailored to your specific course content and learning style.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="faq-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 4V20M4 12H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                </svg>
+                            </span>
+                            <h3>What file formats can I upload to Syllabyte?</h3>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Syllabyte supports a wide range of file formats including PDF, DOCX, TXT, and images (JPG, PNG). You can upload your syllabus, lecture notes, textbook chapters, or any other learning materials in these formats, and our system will process them to create your personalized study resources.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="faq-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 4V20M4 12H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                </svg>
+                            </span>
+                            <h3>Is Syllabyte suitable for all subjects and education levels?</h3>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Yes! Syllabyte is designed to work across all academic disciplines and education levels, from high school to postgraduate studies. Whether you're studying mathematics, literature, sciences, history, or any other subject, our AI adapts to the specific terminology, concepts, and learning approaches of your field.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="faq-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 4V20M4 12H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                </svg>
+                            </span>
+                            <h3>How accurate are the practice quizzes generated by Syllabyte?</h3>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Our practice quizzes are generated based on the specific content you upload, ensuring high relevance and accuracy. The AI identifies key concepts and creates questions that test your understanding at various levels of difficulty. As you use the platform, the system learns from your performance to generate increasingly targeted questions that address your specific learning needs.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="faq-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 4V20M4 12H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                </svg>
+                            </span>
+                            <h3>Can I customize the study materials Syllabyte creates?</h3>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Absolutely! Syllabyte offers extensive customization options. You can edit generated notes, modify flashcards, rearrange mind maps, and adjust quiz difficulty. You can also set preferences for learning styles (visual, auditory, reading/writing, or kinesthetic) and specify focus areas to tailor the materials to your unique learning needs.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>        </div>
+    </main>
+    
+    <footer>
+        <div class="footer-content">
+            <p class="copyright">© 2025 Syllabyte. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">FAQ</a>
+                <a href="#">Support</a>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        // Canvas doodles with improved clarity
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('doodle-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size to match window
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                
+                // Improve rendering quality
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                
+                drawDoodles(); // Redraw when resized
+            }
+            
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+            
+            // Educational doodles with improved clarity
+            function drawDoodles() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Set canvas style
+                ctx.lineWidth = 2.5; // Slightly thicker lines for better visibility
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                
+                // Generate fewer doodles
+                const numDoodles = 20; // Reduced from 30
+                const doodleTypes = [
+                    drawBook,
+                    drawPencil,
+                    drawFormula,
+                    drawAtom,
+                    drawNotebook,
+                    drawGradCap,
+                    drawMindMap,
+                    drawFlashcard
+                ];
+                
+                // Create a more structured layout
+                for (let i = 0; i < numDoodles; i++) {
+                    // Divide canvas into regions to prevent excessive clustering
+                    const regionWidth = canvas.width / 4;
+                    const regionHeight = canvas.height / 5;
+                    
+                    // Calculate region position
+                    const regionX = i % 4;
+                    const regionY = Math.floor(i / 4) % 5;
+                    
+                    // Position within region with some randomness
+                    const x = (regionX * regionWidth) + (Math.random() * regionWidth * 0.7) + (regionWidth * 0.15);
+                    const y = (regionY * regionHeight) + (Math.random() * regionHeight * 0.7) + (regionHeight * 0.15);
+                    
+                    const scale = 0.6 + Math.random() * 0.6; // More moderate scale range
+                    const opacity = 0.18 + Math.random() * 0.15; // Higher minimum opacity
+                    const rotation = Math.random() * Math.PI * 2;
+                    
+                    // Pick a random doodle type
+                    const randomDoodle = doodleTypes[Math.floor(Math.random() * doodleTypes.length)];
+                    
+                    ctx.save();
+                    ctx.translate(x, y);
+                    ctx.rotate(rotation);
+                    ctx.scale(scale, scale);
+                    ctx.globalAlpha = opacity;
+                    
+                    // Slightly more vibrant colors
+                    const r = 130 + Math.floor(Math.random() * 50);
+                    const g = 90 + Math.floor(Math.random() * 40);
+                    const b = 210 + Math.floor(Math.random() * 45);
+                    ctx.strokeStyle = rgb(${r}, ${g}, ${b});
+                    
+                    randomDoodle(ctx);
+                    
+                    ctx.restore();
+                }
+            }            
+            // Keep the original doodle drawing functions
+            function drawBook(ctx) {
+                ctx.beginPath();
+                ctx.rect(-20, -25, 40, 50);
+                ctx.moveTo(-20, -25);
+                ctx.lineTo(-20, 25);
+                ctx.moveTo(-15, -20);
+                ctx.lineTo(15, -20);
+                ctx.moveTo(-15, -10);
+                ctx.lineTo(15, -10);
+                ctx.moveTo(-15, 0);
+                ctx.lineTo(15, 0);
+                ctx.moveTo(-15, 10);
+                ctx.lineTo(15, 10);
+                ctx.stroke();
+            }
+            
+            function drawPencil(ctx) {
+                ctx.beginPath();
+                ctx.moveTo(-20, -20);
+                ctx.lineTo(20, 20);
+                ctx.moveTo(20, 20);
+                ctx.lineTo(15, 25);
+                ctx.moveTo(20, 20);
+                ctx.lineTo(25, 15);
+                ctx.stroke();
+            }
+            
+            function drawFormula(ctx) {
+                ctx.beginPath();
+                ctx.moveTo(-25, 0);
+                ctx.lineTo(25, 0);
+                ctx.moveTo(-20, -10);
+                ctx.lineTo(0, -10);
+                ctx.moveTo(-10, -20);
+                ctx.lineTo(-10, 20);
+                ctx.moveTo(10, -5);
+                ctx.lineTo(20, 15);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.arc(15, -5, 5, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            
+            function drawAtom(ctx) {
+                ctx.beginPath();
+                ctx.arc(0, 0, 20, 0, Math.PI * 2);
+                ctx.moveTo(-25, 0);
+                ctx.ellipse(0, 0, 25, 10, 0, 0, Math.PI * 2);
+                ctx.moveTo(-10, -22);
+                ctx.ellipse(0, 0, 10, 25, Math.PI / 3, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.arc(0, 0, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            function drawNotebook(ctx) {
+                ctx.beginPath();
+                ctx.rect(-20, -30, 40, 60);
+                ctx.moveTo(-20, -30);
+                ctx.lineTo(-20, 30);
+                ctx.moveTo(-15, -25);
+                ctx.lineTo(15, -25);
+                ctx.moveTo(-15, -15);
+                ctx.lineTo(15, -15);
+                ctx.moveTo(-15, -5);
+                ctx.lineTo(15, -5);
+                ctx.moveTo(-15, 5);
+                ctx.lineTo(15, 5);
+                ctx.moveTo(-15, 15);
+                ctx.lineTo(15, 15);
+                ctx.moveTo(-15, 25);
+                ctx.lineTo(15, 25);
+                ctx.stroke();
+                
+                // Spiral binding
+                for (let y = -25; y <= 25; y += 10) {
+                    ctx.beginPath();
+                    ctx.arc(-20, y, 2, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+            }
+            
+            function drawGradCap(ctx) {
+                ctx.beginPath();
+                ctx.moveTo(-20, 0);
+                ctx.lineTo(20, 0);
+                ctx.lineTo(0, -10);
+                ctx.closePath();
+                ctx.moveTo(0, -10);
+                ctx.lineTo(0, -20);
+                ctx.lineTo(5, -20);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.rect(-15, 0, 30, 5);
+                ctx.stroke();
+            }
+            
+            function drawMindMap(ctx) {
+                // Central node
+                ctx.beginPath();
+                ctx.arc(0, 0, 5, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                // Branches
+                for (let i = 0; i < 5; i++) {
+                    const angle = (i / 5) * Math.PI * 2;
+                    const x = Math.cos(angle) * 20;
+                    const y = Math.sin(angle) * 20;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(x, y);
+                    ctx.stroke();
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, 3, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+            }
+            
+            function drawFlashcard(ctx) {
+                ctx.beginPath();
+                ctx.rect(-25, -15, 50, 30);
+                ctx.moveTo(-15, 0);
+                ctx.lineTo(15, 0);
+                ctx.moveTo(0, -10);
+                ctx.lineTo(0, 10);
+                ctx.stroke();
+            }
+            
+            // Initial draw
+            drawDoodles();
+        });        
+    // FAQ Accordion Functionality
+    document.addEventListener('DOMContentLoaded', () => {
+        const faqItems = document.querySelectorAll('.faq-item');
+        
+        faqItems.forEach(item => {
+            const question = item.querySelector('.faq-question');
+            
+            question.addEventListener('click', () => {
+                // Check if this item is already active
+                const isActive = item.classList.contains('active');
+                
+                // Close all items
+                faqItems.forEach(faqItem => {
+                    faqItem.classList.remove('active');
+                });
+                
+                // If the clicked item wasn't active, open it
+                if (!isActive) {
+                    item.classList.add('active');
+                }
+            });
+        });
+    });
+
+
+    </script>
+</body>
+</html>

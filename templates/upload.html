@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Document Upload</title>
+    <!-- GoJS -->
+    <script src="https://unpkg.com/gojs/release/go.js"></script>
+    <!-- MathJax -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f0f17;
+            --primary: #a36bff;
+            --primary-light: #b388ff;
+            --text-color: #f0f0f0;
+            --secondary: #6b44c0;
+            --accent: #ff44e3;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --card-border: rgba(255, 255, 255, 0.2);
+            --neon-glow: 0 0 10px rgba(163, 107, 255, 0.7), 0 0 20px rgba(163, 107, 255, 0.5), 0 0 30px rgba(163, 107, 255, 0.3);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-shadow: var(--neon-glow);
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        h2 {
+            color: var(--primary-light);
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .upload-section {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .file-input {
+            margin: 1.5rem 0;
+        }
+
+        .file-input input[type="file"] {
+            width: 100%;
+            padding: 1rem;
+            border: 2px dashed var(--primary);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-color);
+            cursor: pointer;
+        }
+
+        .file-input input[type="file"]:hover {
+            border-color: var(--accent);
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            transform: translateY(-2px);
+            box-shadow: var(--neon-glow);
+        }
+
+        .back-btn {
+            display: inline-block;
+            text-decoration: none;
+            color: var(--text-color);
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-bottom: 1.5rem;
+        }
+
+        .back-btn:hover {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            transform: translateY(-2px);
+            box-shadow: var(--neon-glow);
+        }
+
+        .content-section {
+            display: flex;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .notes-section {
+            flex: 1;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        #mindmap-container {
+            flex: 2;
+            height: 600px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .flash-message {
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .flash-error {
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid #ff4444;
+            color: #ff4444;
+        }
+
+        @media (max-width: 768px) {
+            .content-section {
+                flex-direction: column;
+            }
+            
+            #mindmap-container {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<!-- Rest of your existing HTML and JavaScript code remains the same -->
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-btn">← Back to Home</a>
+        
+        <h1>📄 Document Upload</h1>
+        
+        <div class="upload-section">
+            <h2>Upload Your Document</h2>
+            <form action="{{ url_for('upload_document') }}" method="post" enctype="multipart/form-data">
+                <div class="file-input">
+                    <input type="file" name="file" id="file" accept=".pdf,.docx" required>
+                </div>
+                <button type="submit" class="submit-btn">Generate Study Materials</button>
+            </form>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% if notes %}
+        <div class="content-section">
+            <div class="notes-section">
+                <h2>📝 Notes</h2>
+                <div id="notes-content">{{ notes | safe }}</div>
+            </div>
+            
+            <div id="mindmap-container"></div>
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        // Initialize GoJS diagram
+        function initMindMap(data) {
+            const $ = go.GraphObject.make;
+            const myDiagram = $(go.Diagram, "mindmap-container", {
+                initialAutoScale: go.Diagram.Uniform,
+                layout: $(go.TreeLayout, {
+                    angle: 0,
+                    layerSpacing: 40
+                }),
+                "undoManager.isEnabled": true
+            });
+
+            myDiagram.nodeTemplate =
+                $(go.Node, "Auto",
+                    { movable: true },
+                    $(go.Shape, "RoundedRectangle", { 
+                        fill: "#4caf50", 
+                        strokeWidth: 0 
+                    }),
+                    $(go.TextBlock, {
+                        margin: 8,
+                        font: "bold 14px sans-serif",
+                        stroke: "white",
+                        wrap: go.TextBlock.WrapFit,
+                        textAlign: "center",
+                        width: 100
+                    }, new go.Binding("text", "text"))
+                );
+
+            myDiagram.linkTemplate =
+                $(go.Link,
+                    { routing: go.Link.Orthogonal },
+                    $(go.Shape, { 
+                        stroke: "#2c5282",
+                        strokeWidth: 2
+                    })
+                );
+
+            if (data && data.length > 0) {
+                const nodes = [];
+                const links = [];
+                data.forEach((node, index) => {
+                    nodes.push({
+                        key: index,
+                        text: node.content
+                    });
+                    if (node.parent !== 'null') {
+                        links.push({
+                            from: parseInt(node.parent),
+                            to: index
+                        });
+                    }
+                });
+                
+                myDiagram.model = new go.GraphLinksModel(nodes, links);
+            }
+        }
+
+        // Initialize MathJax and GoJS when document is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            {% if mindmap %}
+                initMindMap({{ mindmap | tojson | safe }});
+            {% endif %}
+
+            if (window.MathJax) {
+                MathJax.typesetPromise();
+            }
+        });
+    </script>
+</body>
+</html>
