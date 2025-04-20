@@ -109,6 +109,10 @@ DATABASE_URL=sqlite:///history.db
 - `POST /upload_document` - Process uploaded syllabus documents
 - `GET /get_history_content/<history_id>` - Retrieve saved study materials
 
+### Workflow Architecture
+![Workflow](https://github.com/avi-dev-machine/Syllabyte/blob/main/image.png)
+
+
 ## Security
 
 Syllabyte implements several security measures:
