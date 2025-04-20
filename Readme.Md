@@ -1,6 +1,6 @@
 # Syllabyte
 
-![Syllabyte Logo](https://github.com/avi-dev-machine/Syllabyte/Screenshot 2025-04-20 081617.png)
+![Syllabyte Logo](https://github.com/avi-dev-machine/Syllabyte/blob/main/Screenshot%202025-04-20%20081617.png)
 
 > AI-powered study aid generator that transforms syllabus content into comprehensive, interactive study materials
 
